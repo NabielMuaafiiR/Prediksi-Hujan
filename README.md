@@ -83,41 +83,70 @@ station                                        | Nama atau kode stasiun pengamat
 ### Visualisasi Data EDA
 1. Bagaimana curah hujan tiap bulannya dalam kurun waktu satu tahun?
    
-**(gambar heatmap grafik hujan)**
+ <img src="https://github.com/NabielMuaafiiR/Prediksi-Hujan/blob/main/img/heatmap.png" align="center"><br>
 
   Pada sumbu x menunjukkan bulan Januari hingga bulan Desember, sumbu y menunjukkan tahun dari tahun 2013 hingga tahun 2017 dengan angka dalam tiap sel merepresentasikan proporsi rata-rata curah hujan pada bulan tersebut di tahun tersebut. Heatmap rata-rata curah hujan dari tahun 2013 hingga 2017 menunjukkan pola musiman yang konsisten, di mana curah hujan cenderung memuncak pada pertengahan tahun, khususnya di bulan Juni hingga Agustus. Puncak tertinggi terjadi pada Juli 2016 dengan intensitas curah hujan yang relatif paling besar dibandingkan bulan dan tahun lainnya. Sebaliknya, bulan-bulan seperti Januari, Februari, November, dan Desember secara umum menunjukkan intensitas curah hujan yang rendah, menandakan musim kering. Tahun 2016 dan 2015 terlihat memiliki curah hujan yang lebih tinggi secara umum dibandingkan tahun-tahun lainnya, sementara tahun 2013 dan 2017 tampak lebih kering dengan lebih banyak bulan yang memiliki curah hujan rendah.
 
-**(gambar line chart)**
+<img src="https://github.com/NabielMuaafiiR/Prediksi-Hujan/blob/main/img/linechart.png" align="center"><br>
 
   Selain heatmap, terdapat line chart yang dibuat dan bisa dilihat sama dengan heatmap bahwa puncak tertinggi curah hujan terjadi pada bulan Juli tahun 2016 . Grafik ini sangat penting dalam membangun model. Ia membantu memahami data, memvalidasi asumsi, dan memilih strategi modeling yang tepat.
 
 2. Faktor apa yang menyebabkan curah hujan?
 
-**(gambar scatter plot)**
+<img src="https://github.com/NabielMuaafiiR/Prediksi-Hujan/blob/main/img/scatter.png" align="center"><br>
 
    Pada Gambar diatas kita bisa melihat scatter plot dan tabel numerik yang menunjukkan bahwa RAIN tidak ada hubungan yang berarti dengan fitur lainnya ditunjukkan bahwa nilai tertinggi pada tabel numerik hanya 0.080789 yang mana sangat kecil untuk menunjukkan bahwa fitur ini berkorelasi dengan RAIN.
 ## Data Preparation
 ### Menangani Missing Value dan Duplikasi Data
-
-**(gambar missing value)**
+```
+df.isna().sum()
+```
+**Output:**
+```
+year	0
+month	0
+day	0
+hour	0
+PM2.5	925
+PM10	718
+SO2	935
+NO2	1023
+CO	1776
+O3	1719
+TEMP	20
+PRES	20
+DEWP	20
+RAIN	20
+wd	81
+WSPM	14
+```
 
 Missing value yang terdapat pada kolom numerik diatasi dengan cara imputasi menggunakan nilai rata-rata (mean), sementara missing value pada kolom kategorik diisi dengan nilai yang paling sering muncul (modus).
 
-**(gambar duplikasi)**
+```
+df.duplicated().sum()
+```
+**Output:**
+```
+np.int64(0)
+```
 
 Tidak terdapat baris duplikat.
 
 ### Menangani Outlier
 
-**(gambar boxplot sebelum)**
+<img src="https://github.com/NabielMuaafiiR/Prediksi-Hujan/blob/main/img/boxplot sebelum.png" align="center"><br>
 
 Untuk penanganan outlier, awalnya diterapkan metode imputation pada salinan data, yaitu dengan mengganti nilai yang berada di bawah batas bawah (lower bound) dengan nilai batas bawah tersebut, dan sebaliknya, nilai di atas batas atas diganti dengan nilai batas atas. Pendekatan ini bertujuan untuk menjaga konsistensi data numerik agar tidak terpengaruh ekstremitas yang tidak wajar.
 
-**(gambar boxplot sesudah)**
+<img src="https://github.com/NabielMuaafiiR/Prediksi-Hujan/blob/main/img/boxplot sesudah.png" align="center"><br>
 
 Namun, setelah metode ini diterapkan, ditemukan anomali penting: fitur “RAIN” menghilang dari dataset. Hal ini mengindikasikan bahwa perlakuan terhadap outlier justru menyebabkan informasi penting hilang, terutama karena data menunjukkan tidak ada kejadian hujan selama 2013–2017 dalam dataset asli, yang berisiko mengacaukan makna dari fitur tersebut.Sebagai solusi, diputuskan untuk tidak melakukan imputasi pada outlier secara langsung. Sebagai gantinya, ditambahkan kolom baru bernama “RAIN_Category” yang mengelompokkan data ke dalam kategori hujan dan tidak hujan, agar analisis dapat diarahkan pada pendekatan klasifikasi berdasarkan keberadaan hujan, tanpa merusak integritas data asli.
 
-**(gambar modifikasi label)**
+| RAIN_Category |  Count  |
+|-----|-----|
+|  Tidak Hujan  | 33664  | 
+|  Hujan  | 1400 | 
 
 ### Melakukan encoding label:
 ```
@@ -166,7 +195,7 @@ def create_sequences(X, y, time_steps=3):
 
 X_seq, y_seq = create_sequences(X_scaled, y_encoded, time_steps=3)
 ```
-Sliding window dilakukan untuk Menangkap Ketergantungan Waktu. Banyak fenomena, seperti curah hujan atau polusi udara, bergantung pada data sebelumnya (misalnya, jam/tanggal sebelumnya). Dengan window, model dapat mempelajari pola perubahan dari waktu ke waktu. Tak hanya itu windowing merupakan syarat untuk Model LSTM/RNN. Model berbasis memori seperti LSTM membutuhkan urutan sebagai input, bukan data tabular biasa. Window membantu membentuk input dalam dimensi [samples, time_steps, features].
+Sliding window dilakukan untuk Menangkap Ketergantungan Waktu. Banyak fenomena, seperti curah hujan atau polusi udara, bergantung pada data sebelumnya (misalnya, jam/tanggal sebelumnya). Dengan window, model dapat mempelajari pola perubahan dari waktu ke waktu. Tak hanya itu windowing merupakan syarat untuk Model LSTM/RNN. Model berbasis memori seperti LSTM membutuhkan urutan sebagai input, bukan data tabular biasa.
 
 ### Splitting Data
 ```
@@ -337,9 +366,7 @@ weighted avg       0.98      0.98      0.98     13466
 
 #### 2. LSTM tanpa SMOTE
 Hasil training dari model LSTM amat bagus dapat dilihat pada grafik berikut:
-  **(gambar grafik 1)**
-
-  **(gambar grafik 2)**
+  <img src="https://github.com/NabielMuaafiiR/Prediksi-Hujan/blob/main/img/gambar grafik.png" align="center"><br>
 
 Dilakukan testing menggunakan model LSTM hasil evaluasi model mengalami penurunan dimana akurasi menjadi 96.%, dan F1-score sebesar 0.4189, untuk detail confusion matriks sebagai berikut:
 
