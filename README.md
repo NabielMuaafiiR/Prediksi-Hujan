@@ -29,7 +29,32 @@ Untuk mengatasi tantangan tersebut, penelitian ini akan menggunakan dua pendekat
 Dataset yang diambil pada projek ini berasal dari github https://github.com/marceloreis/HTI/tree/master/PRSA_Data_20130301-20170228. Data yang digunakan hanya satu yaitu daerah Aotizhongxin. Data terdiri dari 35064 baris dan 18 kolom: 'No', 'year', 'month', 'day', 'hour', 'PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 'wd', 'WSPM', 'station'
 
 ### Tipe Data
-**(gambar info)**
+```
+<class 'pandas.core.frame.DataFrame'>
+Index: 35064 entries, 1 to 35064
+Data columns (total 17 columns):
+ #   Column   Non-Null Count  Dtype  
+---  ------   --------------  -----  
+ 0   year     35064 non-null  int64  
+ 1   month    35064 non-null  int64  
+ 2   day      35064 non-null  int64  
+ 3   hour     35064 non-null  int64  
+ 4   PM2.5    34139 non-null  float64
+ 5   PM10     34346 non-null  float64
+ 6   SO2      34129 non-null  float64
+ 7   NO2      34041 non-null  float64
+ 8   CO       33288 non-null  float64
+ 9   O3       33345 non-null  float64
+ 10  TEMP     35044 non-null  float64
+ 11  PRES     35044 non-null  float64
+ 12  DEWP     35044 non-null  float64
+ 13  RAIN     35044 non-null  float64
+ 14  wd       34983 non-null  object 
+ 15  WSPM     35050 non-null  float64
+ 16  station  35064 non-null  object 
+dtypes: float64(11), int64(4), object(2)
+memory usage: 4.8+ MB
+```
 
 
 ### Deskripsi Variabel
@@ -195,7 +220,40 @@ history = lstm.fit(
 ```
   Lalu dilakukan fitting data terhadap model yang sudah dibangun, dengan epoch sebanyak 100, batch size digunakan 16. Setelah cell di run didapatkan hasil berikut:
 
-  **(gambar hasil training)**
+ ```
+Epoch 1/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 6s 3ms/step - accuracy: 0.9547 - loss: 0.1958 - val_accuracy: 0.9633 - val_loss: 0.1451
+Epoch 2/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 2ms/step - accuracy: 0.9604 - loss: 0.1379 - val_accuracy: 0.9629 - val_loss: 0.1273
+Epoch 3/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 6s 3ms/step - accuracy: 0.9605 - loss: 0.1260 - val_accuracy: 0.9640 - val_loss: 0.1193
+Epoch 4/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 2ms/step - accuracy: 0.9622 - loss: 0.1164 - val_accuracy: 0.9643 - val_loss: 0.1140
+Epoch 5/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 5s 2ms/step - accuracy: 0.9645 - loss: 0.1102 - val_accuracy: 0.9643 - val_loss: 0.1171
+Epoch 6/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 3ms/step - accuracy: 0.9637 - loss: 0.1108 - val_accuracy: 0.9640 - val_loss: 0.1142
+Epoch 7/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 2ms/step - accuracy: 0.9647 - loss: 0.1052 - val_accuracy: 0.9643 - val_loss: 0.1212
+Epoch 8/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 5s 2ms/step - accuracy: 0.9668 - loss: 0.0992 - val_accuracy: 0.9654 - val_loss: 0.1056
+Epoch 9/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 3ms/step - accuracy: 0.9650 - loss: 0.1021 - val_accuracy: 0.9651 - val_loss: 0.1176
+Epoch 10/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.9658 - loss: 0.1011 - val_accuracy: 0.9654 - val_loss: 0.1090
+Epoch 11/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 2ms/step - accuracy: 0.9670 - loss: 0.0971 - val_accuracy: 0.9665 - val_loss: 0.1041
+Epoch 12/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 6s 4ms/step - accuracy: 0.9642 - loss: 0.1013 - val_accuracy: 0.9643 - val_loss: 0.1393
+Epoch 13/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 8s 2ms/step - accuracy: 0.9658 - loss: 0.1005 - val_accuracy: 0.9640 - val_loss: 0.1077
+Epoch 14/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 5s 2ms/step - accuracy: 0.9672 - loss: 0.0959 - val_accuracy: 0.9647 - val_loss: 0.1179
+Epoch 15/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 2ms/step - accuracy: 0.9664 - loss: 0.0942 - val_accuracy: 0.9658 - val_loss: 0.1097
+Epoch 16/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 6s 3ms/step - accuracy: 0.9689 - loss: 0.0887 - val_accuracy: 0.9508 - val_loss: 0.1400
+```
 
 ## Evaluation
 
@@ -344,6 +402,10 @@ data_df = pd.DataFrame(data)
 pred = rfc.predict(data_df)
 print(pred)
 ```
+**Output:**
+```
+['Hujan']
+```
 Hasil prediksi oleh random forest sesuai dengan label yang asli yaitu Hujan.
 
 ### LSTM tanpa SMOTE
@@ -363,6 +425,12 @@ print("Probabilitas hujan:", prediksi[0][0])
 # Konversi ke label 0 atau 1 jika perlu
 label = 1 if prediksi[0][0] > 0.3 else 0
 print("Apakah akan hujan?", "Ya" if label == 1 else "Tidak")
+```
+**Output:**
+```
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 250ms/step
+Probabilitas hujan: 0.11804846
+Apakah akan hujan? Tidak
 ```
 Hasil yang didapat Tidak Hujan. Tidak sesuai dengan label yang sebenarnya.
 ## Kesimpulan
