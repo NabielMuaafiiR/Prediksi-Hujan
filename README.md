@@ -197,10 +197,6 @@ history = lstm.fit(
 
   **(gambar hasil training)**
 
-  **(gambar grafik 1)**
-
-  **(gambar grafik 2)**
-
 ## Evaluation
 
 ### Penjelasan Matriks
@@ -283,8 +279,11 @@ weighted avg       0.98      0.98      0.98     13466
 
 #### 2. LSTM tanpa SMOTE
 Hasil training dari model LSTM amat bagus dapat dilihat pada grafik berikut:
+  **(gambar grafik 1)**
 
-Dengan menggunakan LSTM hasil evaluasi model mengalami penurunan dimana akurasi menjadi 96.%, dan F1-score sebesar 0.4189, untuk detail confusion matriks sebagai berikut:
+  **(gambar grafik 2)**
+
+Dilakukan testing menggunakan model LSTM hasil evaluasi model mengalami penurunan dimana akurasi menjadi 96.%, dan F1-score sebesar 0.4189, untuk detail confusion matriks sebagai berikut:
 
 Confusion Matrix:
 |     |  Tidak Hujan  |  Hujan  |  
@@ -338,10 +337,10 @@ data = {
         'wd_WNW': [False],
         'wd_WSW': [False]
         }
+data_df = pd.DataFrame(data)
 ```
 ### Random Forest dengan SMOTE
 ```
-data_df = pd.DataFrame(data)
 pred = rfc.predict(data_df)
 print(pred)
 ```
