@@ -26,7 +26,7 @@ Untuk mengatasi tantangan tersebut, penelitian ini akan menggunakan dua pendekat
 - Membandingkan performa kedua pendekatan model tersebut dalam konteks prediksi curah hujan ekstrem untuk mendukung perencanaan dan mitigasi risiko hidrometeorologi di wilayah perkotaan.
 
 ## Data Understanding
-Dataset yang diambil pada projek ini berasal dari github https://github.com/marceloreis/HTI/tree/master/PRSA_Data_20130301-20170228. Data yang digunakan hanya satu yaitu daerah Aotizhongxin. Data terdiri dari 35064 baris dan 18 kolom: 'No', 'year', 'month', 'day', 'hour', 'PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 'wd', 'WSPM', 'station'
+Dataset yang diambil pada projek ini berasal dari github https://github.com/marceloreis/HTI/tree/master/PRSA_Data_20130301-20170228. Data yang digunakan hanya satu yaitu daerah Aotizhongxin. Data terdiri dari 35064 baris dan 17 kolom: 'year', 'month', 'day', 'hour', 'PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 'wd', 'WSPM', 'station'
 
 ### Tipe Data
 ```
@@ -55,7 +55,11 @@ Data columns (total 17 columns):
 dtypes: float64(11), int64(4), object(2)
 memory usage: 4.8+ MB
 ```
-
+### Membuang Kolom
+```
+df = df.drop(columns = ['station'])
+```
+Kolom station dibuang dikarenakan dalam data ini hanya menggunakan satu stasiun saja. Sehingga kolom station tidak perlu untuk dimasukkan kedalam prediksi.
 
 ### Deskripsi Variabel
 Nama Fitur                                     | Deskripsi
@@ -80,23 +84,6 @@ WSPM                                           | Kecepatan angin (m/s) saat peng
 station                                        | Nama atau kode stasiun pengamatan
 
 
-### Visualisasi Data EDA
-1. Bagaimana curah hujan tiap bulannya dalam kurun waktu satu tahun?
-   
- <img src="https://github.com/NabielMuaafiiR/Prediksi-Hujan/blob/main/img/heatmap.png" align="center"><br>
-
-  Pada sumbu x menunjukkan bulan Januari hingga bulan Desember, sumbu y menunjukkan tahun dari tahun 2013 hingga tahun 2017 dengan angka dalam tiap sel merepresentasikan proporsi rata-rata curah hujan pada bulan tersebut di tahun tersebut. Heatmap rata-rata curah hujan dari tahun 2013 hingga 2017 menunjukkan pola musiman yang konsisten, di mana curah hujan cenderung memuncak pada pertengahan tahun, khususnya di bulan Juni hingga Agustus. Puncak tertinggi terjadi pada Juli 2016 dengan intensitas curah hujan yang relatif paling besar dibandingkan bulan dan tahun lainnya. Sebaliknya, bulan-bulan seperti Januari, Februari, November, dan Desember secara umum menunjukkan intensitas curah hujan yang rendah, menandakan musim kering. Tahun 2016 dan 2015 terlihat memiliki curah hujan yang lebih tinggi secara umum dibandingkan tahun-tahun lainnya, sementara tahun 2013 dan 2017 tampak lebih kering dengan lebih banyak bulan yang memiliki curah hujan rendah.
-
-<img src="https://github.com/NabielMuaafiiR/Prediksi-Hujan/blob/main/img/linechart.png" align="center"><br>
-
-  Selain heatmap, terdapat line chart yang dibuat dan bisa dilihat sama dengan heatmap bahwa puncak tertinggi curah hujan terjadi pada bulan Juli tahun 2016 . Grafik ini sangat penting dalam membangun model. Ia membantu memahami data, memvalidasi asumsi, dan memilih strategi modeling yang tepat.
-
-2. Faktor apa yang menyebabkan curah hujan?
-
-<img src="https://github.com/NabielMuaafiiR/Prediksi-Hujan/blob/main/img/scatter.png" align="center"><br>
-
-   Pada Gambar diatas kita bisa melihat scatter plot dan tabel numerik yang menunjukkan bahwa RAIN tidak ada hubungan yang berarti dengan fitur lainnya ditunjukkan bahwa nilai tertinggi pada tabel numerik hanya 0.080789 yang mana sangat kecil untuk menunjukkan bahwa fitur ini berkorelasi dengan RAIN.
-## Data Preparation
 ### Menangani Missing Value dan Duplikasi Data
 ```
 df.isna().sum()
@@ -135,18 +122,36 @@ Tidak terdapat baris duplikat.
 
 ### Menangani Outlier
 
-<img src="https://github.com/NabielMuaafiiR/Prediksi-Hujan/blob/main/img/boxplot sebelum.png" align="center"><br>
+![boxplot sebelum](https://github.com/user-attachments/assets/352c60e4-a23c-4083-a546-9be12e6bfb56)
 
 Untuk penanganan outlier, awalnya diterapkan metode imputation pada salinan data, yaitu dengan mengganti nilai yang berada di bawah batas bawah (lower bound) dengan nilai batas bawah tersebut, dan sebaliknya, nilai di atas batas atas diganti dengan nilai batas atas. Pendekatan ini bertujuan untuk menjaga konsistensi data numerik agar tidak terpengaruh ekstremitas yang tidak wajar.
 
-<img src="https://github.com/NabielMuaafiiR/Prediksi-Hujan/blob/main/img/boxplot sesudah.png" align="center"><br>
+![boxplot sesudah](https://github.com/user-attachments/assets/21dd2ca0-ca32-4d00-a94c-dbf80bc9d4fb)
 
 Namun, setelah metode ini diterapkan, ditemukan anomali penting: fitur “RAIN” menghilang dari dataset. Hal ini mengindikasikan bahwa perlakuan terhadap outlier justru menyebabkan informasi penting hilang, terutama karena data menunjukkan tidak ada kejadian hujan selama 2013–2017 dalam dataset asli, yang berisiko mengacaukan makna dari fitur tersebut.Sebagai solusi, diputuskan untuk tidak melakukan imputasi pada outlier secara langsung. Sebagai gantinya, ditambahkan kolom baru bernama “RAIN_Category” yang mengelompokkan data ke dalam kategori hujan dan tidak hujan, agar analisis dapat diarahkan pada pendekatan klasifikasi berdasarkan keberadaan hujan, tanpa merusak integritas data asli.
 
 | RAIN_Category |  Count  |
 |-----|-----|
 |  Tidak Hujan  | 33664  | 
-|  Hujan  | 1400 | 
+|  Hujan  | 1400 |
+
+### Visualisasi Data EDA
+1. Bagaimana curah hujan tiap bulannya dalam kurun waktu satu tahun?
+   
+![heatmap](https://github.com/user-attachments/assets/6c60cd4c-4e5d-4bec-85a3-cf48c2b757bc)
+
+  Pada sumbu x menunjukkan bulan Januari hingga bulan Desember, sumbu y menunjukkan tahun dari tahun 2013 hingga tahun 2017 dengan angka dalam tiap sel merepresentasikan proporsi rata-rata curah hujan pada bulan tersebut di tahun tersebut. Heatmap rata-rata curah hujan dari tahun 2013 hingga 2017 menunjukkan pola musiman yang konsisten, di mana curah hujan cenderung memuncak pada pertengahan tahun, khususnya di bulan Juni hingga Agustus. Puncak tertinggi terjadi pada Juli 2016 dengan intensitas curah hujan yang relatif paling besar dibandingkan bulan dan tahun lainnya. Sebaliknya, bulan-bulan seperti Januari, Februari, November, dan Desember secara umum menunjukkan intensitas curah hujan yang rendah, menandakan musim kering. Tahun 2016 dan 2015 terlihat memiliki curah hujan yang lebih tinggi secara umum dibandingkan tahun-tahun lainnya, sementara tahun 2013 dan 2017 tampak lebih kering dengan lebih banyak bulan yang memiliki curah hujan rendah.
+
+![linechart](https://github.com/user-attachments/assets/b5d7442f-0a53-4bfc-8810-ae94d96056e5)
+
+  Selain heatmap, terdapat line chart yang dibuat dan bisa dilihat sama dengan heatmap bahwa puncak tertinggi curah hujan terjadi pada bulan Juli tahun 2016 . Grafik ini sangat penting dalam membangun model. Ia membantu memahami data, memvalidasi asumsi, dan memilih strategi modeling yang tepat.
+
+2. Faktor apa yang menyebabkan curah hujan?
+
+![scatter](https://github.com/user-attachments/assets/fd97fbb7-0576-4a5f-a9c3-c6f9d56814a6)
+
+   Pada Gambar diatas kita bisa melihat scatter plot dan tabel numerik yang menunjukkan bahwa RAIN tidak ada hubungan yang berarti dengan fitur lainnya ditunjukkan bahwa nilai tertinggi pada tabel numerik hanya 0.080789 yang mana sangat kecil untuk menunjukkan bahwa fitur ini berkorelasi dengan RAIN.
+## Data Preparation
 
 ### Melakukan encoding label:
 ```
@@ -216,7 +221,11 @@ rfc.fit(X_train, y_train)
 y_pred = rfc.predict(X_test)
 ```
 
-Model Random Forest diinisialisasi dengan parameter default dan dilatih menggunakan data latih melalui model.fit(), kemudian digunakan untuk memprediksi kategori hujan pada data uji dengan model.predict().
+Random forest merupakan algoritma pengembangan dari algoritma decision tree. Random forest merupakan prinsip umum pengklasifikasi yang menggabungkan L tree-structured based classifier (Ali J, et al. 2012). Tujuan utama Random Forest Classifier adalah meningkatkan akurasi prediksi dan mengurangi risiko overfitting yang sering terjadi pada pohon keputusan tunggal.
+
+Proses kerja Random Forest Classifier dimulai dengan membentuk beberapa pohon keputusan (decision tree) berdasarkan subset acak dari data latih dan fitur (proses ini disebut bootstrap sampling dan feature randomization). Setiap pohon akan melakukan klasifikasi secara independen, dan hasil akhir ditentukan berdasarkan  mayoritas suara dari seluruh pohon.
+
+Pada pengujian ini model Random Forest diinisialisasi dengan parameter default dan dilatih menggunakan data latih melalui model.fit(), kemudian digunakan untuk memprediksi kategori hujan pada data uji dengan model.predict().
 
 2. Model LSTM
 ```
@@ -295,7 +304,7 @@ Akurasi adalah metrik evaluasi yang mengukur proporsi prediksi yang benar terhad
 
 Rumus:
 
-<img src="https://github.com/NabielMuaafiiR/Predictive-Analysis-Sentiment-Brand-Tweeter/blob/main/img/rumus akurasi.jpg" align="center"><br>
+![rumus akurasi](https://github.com/user-attachments/assets/3a640902-3148-406f-905b-eb68e89f12da)
 
 Keterangan:
 TP: True Positive (positif yang diprediksi benar)
@@ -316,17 +325,17 @@ F1-score adalah metrik harmonis antara precision dan recall. F1 digunakan untuk 
 Rumus:
 F1-score
 
-<img src="https://github.com/NabielMuaafiiR/Predictive-Analysis-Sentiment-Brand-Tweeter/blob/main/img/F1 score.jpg" align="center"><br>
- 
+![F1 score](https://github.com/user-attachments/assets/a7d5f333-d92d-4363-949c-f8e97e8da769)
+
 Precision:
 
- <img src="https://github.com/NabielMuaafiiR/Predictive-Analysis-Sentiment-Brand-Tweeter/blob/main/img/precision.jpg" align="center"><br>
+![precision](https://github.com/user-attachments/assets/52a40c27-3abd-40d0-a995-ad336814bc3c)
  
 Mengukur berapa banyak prediksi positif yang benar.
 
 Recall:
 
- <img src="https://github.com/NabielMuaafiiR/Predictive-Analysis-Sentiment-Brand-Tweeter/blob/main/img/recall.jpg" align="center"><br>
+![recall](https://github.com/user-attachments/assets/6311ce4e-bd19-4d2d-8e3e-8f5202c5b017)
  
 Mengukur berapa banyak dari total data positif yang berhasil dikenali dengan benar.
 
@@ -366,7 +375,8 @@ weighted avg       0.98      0.98      0.98     13466
 
 #### 2. LSTM tanpa SMOTE
 Hasil training dari model LSTM amat bagus dapat dilihat pada grafik berikut:
-  <img src="https://github.com/NabielMuaafiiR/Prediksi-Hujan/blob/main/img/gambar grafik.png" align="center"><br>
+
+![gambar grafik](https://github.com/user-attachments/assets/d9dfc8e3-e5d8-4b43-bbc1-2c8299757e58)
 
 Dilakukan testing menggunakan model LSTM hasil evaluasi model mengalami penurunan dimana akurasi menjadi 96.%, dan F1-score sebesar 0.4189, untuk detail confusion matriks sebagai berikut:
 
@@ -468,8 +478,10 @@ Berdasarkan hasil evaluasi, model Random Forest yang dilatih dengan teknik SMOTE
 2. Menerapkan teknik evaluasi yang lebih beragam, seperti confusion matrix per kelas, macro/micro averaging, dan visualisasi performa model, untuk memberikan pemahaman lebih menyeluruh terhadap hasil klasifikasi.
 
 ## Refrensi
-Jiang, X., Luo, Y., Zhang, D. L., & Wu, M. (2020). Urbanization enhanced summertime extreme hourly precipitation over the Yangtze River Delta. Journal of Climate, 33(13), 5809-5826.
+Ali J, Khan R, Ahmad N, Maqsood I. 2012. Random forest and decision trees. International Journal of Computer Science Issue (IJCSI). 9(5): 272.
 
-Erlin, E., Desnelita, Y., Nasution, N., Suryati, L., & Zoromi, F. (2022). Dampak SMOTE terhadap Kinerja Random Forest Classifier berdasarkan Data Tidak seimbang. MATRIK: Jurnal Manajemen, Teknik Informatika dan Rekayasa Komputer, 21(3), 677-690.
+Erlin E, Desnelita Y, Nasution N, Suryati L, Zoromi F. 2022. Dampak SMOTE terhadap Kinerja Random Forest Classifier berdasarkan Data Tidak seimbang. MATRIK: Jurnal Manajemen, Teknik Informatika dan Rekayasa Komputer. 21(3): 677-690.
+
+Jiang X, Luo Y, Zhang DL, Wu M. 2020. Urbanization enhanced summertime extreme hourly precipitation over the Yangtze River Delta. Journal of Climate. 33(13): 5809-5826.
 
 Dicoding. (2024). Machine Learning Terapan. Diakses pada 25 Mei 2025 dari https://www.dicoding.com/academies/319-machine-learning-terapan.
