@@ -66,10 +66,6 @@ df.info()
 
 """Melihat tipe data pada tiap kolom"""
 
-df = df.drop(columns = ['station'])
-
-"""Membuang kolom station, karena hanya 1 stasiun yang dianalisis"""
-
 df.isna().sum()
 
 """Melihat kolom-kolom yang memiliki nilai kosong"""
@@ -98,8 +94,99 @@ plt.tight_layout()
 - Tidak terdapat duplikasi data
 - Banyak sekali outlier pada data-data numerik
 
+### Explore Data Analysis
+"""
+
+df_numeric = df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 'WSPM']]
+df_numeric.describe()
+
+"""Melakukan eksplorasi data numerik"""
+
+# Set the figure size
+plt.figure(figsize=(15, 10))
+
+# Iterate through each numeric column and create a histogram
+for i, col in enumerate(df_numeric.columns):
+    plt.subplot(4, 3, i + 1)  # Adjust subplot layout as needed
+    sns.histplot(df_numeric[col], kde=True)  # Added kde for density estimation
+    plt.title(f'Histogram of {col}')
+    plt.xlabel(col)
+    plt.ylabel('Frequency')
+
+plt.tight_layout()
+plt.show()
+
+"""Melihat kembali sebaran data numerik
+
+- Bagaimana curah hujan tiap bulannya dalam kurun waktu satu tahun
+"""
+
+rain_avg = df.groupby(['year', 'month'])['RAIN'].mean().reset_index()
+
+# Buat pivot table untuk heatmap
+rain_pivot = rain_avg.pivot(index='year', columns='month', values='RAIN')
+
+# Plot menggunakan heatmap
+plt.figure(figsize=(24, 12))
+sns.heatmap(rain_pivot, cmap="Blues", annot=True, fmt=".8f")
+plt.title("Rata-rata Curah Hujan (mm) dari Tahun ke Tahun Berdasarkan Bulan")
+plt.xlabel("Bulan")
+plt.ylabel("Tahun")
+plt.show()
+
+"""Membuat heatmap untuk melihat bagaimana sebaran jumlah hujan, dengan sumbu x adalah bulan dan sumbu y adalah tahun. Dapat dilihat hampir tiap bulan ke-7 menjadi puncak hujan
+
+Analisis pertanyaan kedua
+- Faktor apa yang menyebabkan curah hujan
+"""
+
+# Set the figure size
+plt.figure(figsize=(15, 10))
+
+# Iterate through each numeric column and create a histogram
+for i, col in enumerate(df_numeric.columns):
+    plt.subplot(4, 3, i + 1)  # Adjust subplot layout as needed
+    sns.scatterplot(x=df['RAIN'], y=df_numeric[col])  # Added kde for density estimation
+    plt.title(f'Scatter Plot of RAIN vs {col}')
+    plt.xlabel('RAIN')
+    plt.ylabel(col)
+
+plt.tight_layout()
+plt.show()
+
+df_numeric.corr()
+
+"""Melihat apakah terdapat korelasi fitur antara hujan dengan fitur yang lainnya. Tidak terdapat korelasi pada fitur RAIN dengan fitur yang lain
+
+**Insight:**
+- Melakukan pivot tabel untuk melihat rata-rata curah hujan tiap bulannya dalam kurun waktu 2013/2017
+- Melihat korelasi antara hujan dengan atribut yang lain
+"""
+
+# Group data by year and month, then sum the rainfall
+rain_sum = df.groupby(['year', 'month'])['RAIN'].mean().reset_index()
+
+# Create the line chart
+plt.figure(figsize=(12, 6))
+for year in rain_sum['year'].unique():
+    year_data = rain_sum[rain_sum['year'] == year]
+    plt.plot(year_data['month'], year_data['RAIN'], label=str(year))
+
+plt.xlabel("Month")
+plt.ylabel("Total Rainfall (mm)")
+plt.title("Rata-rata curah hujan dari tahun 2013/2017")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+"""Membuat grafik sebaran hujan, untuk memudahkan pemahaman sebaran hujan. Dan dapat dilihat hampir tiap bulan ke-7 menjadi puncak jumlah hujan
+
 ### Cleaning Data
 """
+
+df = df.drop(columns = ['station'])
+
+"""Membuang kolom station, karena hanya 1 stasiun yang dianalisis"""
 
 # Mengisi missing value kolom numerik dengan rata-rata
 for col in ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 'WSPM']:
@@ -170,97 +257,6 @@ df['RAIN_Category'].value_counts()
 - Menangani outlier dengan metode imputation pada data copy, jika outlier bawah maka diisi dengan nilai batas bawah dan jika outlier atas maka diisi dengan nilai batas atas
 - Semua kolom outlier yang diisi dengan batas atas dan bawah menunjukkan hilangnya fitur-fitur seperti pada kolom 'RAIN' ketika dilakukan imputation maka nilai rain hannya 0.0 itu akan merusak fakta dari data yang artinya tidak pernah ada hujan dari tahun 2013-2017, sehingga tidak perlu dilakukan imputation pada outlier
 - Menambah kolom RAIN_Category sebagai kategori Hujan dan Tidak Hujan yang nantinya untuk dilakukan klasifikasi
-
-# **Exploratory Data Analysis (EDA)**
-
-### Explore ...
-"""
-
-df_numeric = df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 'WSPM']]
-df_numeric.describe()
-
-"""Melakukan eksplorasi data numerik"""
-
-# Set the figure size
-plt.figure(figsize=(15, 10))
-
-# Iterate through each numeric column and create a histogram
-for i, col in enumerate(df_numeric.columns):
-    plt.subplot(4, 3, i + 1)  # Adjust subplot layout as needed
-    sns.histplot(df_numeric[col], kde=True)  # Added kde for density estimation
-    plt.title(f'Histogram of {col}')
-    plt.xlabel(col)
-    plt.ylabel('Frequency')
-
-plt.tight_layout()
-plt.show()
-
-"""Melihat kembali sebaran data numerik
-
-- Bagaimana curah hujan tiap bulannya dalam kurun waktu satu tahun
-"""
-
-rain_avg = df.groupby(['year', 'month'])['RAIN'].mean().reset_index()
-
-# Buat pivot table untuk heatmap
-rain_pivot = rain_avg.pivot(index='year', columns='month', values='RAIN')
-
-# Plot menggunakan heatmap
-plt.figure(figsize=(24, 12))
-sns.heatmap(rain_pivot, cmap="Blues", annot=True, fmt=".8f")
-plt.title("Rata-rata Curah Hujan (mm) dari Tahun ke Tahun Berdasarkan Bulan")
-plt.xlabel("Bulan")
-plt.ylabel("Tahun")
-plt.show()
-
-"""Membuat heatmap untuk melihat bagaimana sebaran jumlah hujan, dengan sumbu x adalah bulan dan sumbu y adalah tahun. Dapat dilihat hampir tiap bulan ke-7 menjadi puncak hujan
-
-Analisis pertanyaan kedua
-- Faktor apa yang menyebabkan curah hujan
-"""
-
-# Set the figure size
-plt.figure(figsize=(15, 10))
-
-# Iterate through each numeric column and create a histogram
-for i, col in enumerate(df_numeric.columns):
-    plt.subplot(4, 3, i + 1)  # Adjust subplot layout as needed
-    sns.scatterplot(x=df['RAIN'], y=df_numeric[col])  # Added kde for density estimation
-    plt.title(f'Scatter Plot of RAIN vs {col}')
-    plt.xlabel('RAIN')
-    plt.ylabel(col)
-
-plt.tight_layout()
-plt.show()
-
-df_numeric.corr()
-
-"""Melihat apakah terdapat korelasi fitur antara hujan dengan fitur yang lainnya. Tidak terdapat korelasi pada fitur RAIN dengan fitur yang lain
-
-**Insight:**
-- Melakukan pivot tabel untuk melihat rata-rata curah hujan tiap bulannya dalam kurun waktu 2013/2017
-- Melihat korelasi antara hujan dengan atribut yang lain
-
-## Visualization & Explanatory Analysis
-"""
-
-# Group data by year and month, then sum the rainfall
-rain_sum = df.groupby(['year', 'month'])['RAIN'].mean().reset_index()
-
-# Create the line chart
-plt.figure(figsize=(12, 6))
-for year in rain_sum['year'].unique():
-    year_data = rain_sum[rain_sum['year'] == year]
-    plt.plot(year_data['month'], year_data['RAIN'], label=str(year))
-
-plt.xlabel("Month")
-plt.ylabel("Total Rainfall (mm)")
-plt.title("Rata-rata curah hujan dari tahun 2013/2017")
-plt.legend()
-plt.grid(True)
-plt.show()
-
-"""Membuat grafik sebaran hujan, untuk memudahkan pemahaman sebaran hujan. Dan dapat dilihat hampir tiap bulan ke-7 menjadi puncak jumlah hujan
 
 # **Modeling**
 
