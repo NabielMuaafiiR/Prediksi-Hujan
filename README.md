@@ -55,11 +55,6 @@ Data columns (total 17 columns):
 dtypes: float64(11), int64(4), object(2)
 memory usage: 4.8+ MB
 ```
-### Membuang Kolom
-```
-df = df.drop(columns = ['station'])
-```
-Kolom station dibuang dikarenakan dalam data ini hanya menggunakan satu stasiun saja. Sehingga kolom station tidak perlu untuk dimasukkan kedalam prediksi.
 
 ### Deskripsi Variabel
 Nama Fitur                                     | Deskripsi
@@ -84,7 +79,7 @@ WSPM                                           | Kecepatan angin (m/s) saat peng
 station                                        | Nama atau kode stasiun pengamatan
 
 
-### Menangani Missing Value dan Duplikasi Data
+### Melihat Missing Value dan Duplikasi Data
 ```
 df.isna().sum()
 ```
@@ -107,8 +102,7 @@ RAIN	20
 wd	81
 WSPM	14
 ```
-
-Missing value yang terdapat pada kolom numerik diatasi dengan cara imputasi menggunakan nilai rata-rata (mean), sementara missing value pada kolom kategorik diisi dengan nilai yang paling sering muncul (modus).
+Terdapat banyak sekali missing value. Terutama pada kolom CO dengan total 1776.
 
 ```
 df.duplicated().sum()
@@ -120,20 +114,12 @@ np.int64(0)
 
 Tidak terdapat baris duplikat.
 
-### Menangani Outlier
+### Melihat Outlier
 
 ![boxplot sebelum](https://github.com/user-attachments/assets/352c60e4-a23c-4083-a546-9be12e6bfb56)
 
 Untuk penanganan outlier, awalnya diterapkan metode imputation pada salinan data, yaitu dengan mengganti nilai yang berada di bawah batas bawah (lower bound) dengan nilai batas bawah tersebut, dan sebaliknya, nilai di atas batas atas diganti dengan nilai batas atas. Pendekatan ini bertujuan untuk menjaga konsistensi data numerik agar tidak terpengaruh ekstremitas yang tidak wajar.
 
-![boxplot sesudah](https://github.com/user-attachments/assets/21dd2ca0-ca32-4d00-a94c-dbf80bc9d4fb)
-
-Namun, setelah metode ini diterapkan, ditemukan anomali penting: fitur “RAIN” menghilang dari dataset. Hal ini mengindikasikan bahwa perlakuan terhadap outlier justru menyebabkan informasi penting hilang, terutama karena data menunjukkan tidak ada kejadian hujan selama 2013–2017 dalam dataset asli, yang berisiko mengacaukan makna dari fitur tersebut.Sebagai solusi, diputuskan untuk tidak melakukan imputasi pada outlier secara langsung. Sebagai gantinya, ditambahkan kolom baru bernama “RAIN_Category” yang mengelompokkan data ke dalam kategori hujan dan tidak hujan, agar analisis dapat diarahkan pada pendekatan klasifikasi berdasarkan keberadaan hujan, tanpa merusak integritas data asli.
-
-| RAIN_Category |  Count  |
-|-----|-----|
-|  Tidak Hujan  | 33664  | 
-|  Hujan  | 1400 |
 
 ### Visualisasi Data EDA
 1. Bagaimana curah hujan tiap bulannya dalam kurun waktu satu tahun?
@@ -153,6 +139,62 @@ Namun, setelah metode ini diterapkan, ditemukan anomali penting: fitur “RAIN�
    Pada Gambar diatas kita bisa melihat scatter plot dan tabel numerik yang menunjukkan bahwa RAIN tidak ada hubungan yang berarti dengan fitur lainnya ditunjukkan bahwa nilai tertinggi pada tabel numerik hanya 0.080789 yang mana sangat kecil untuk menunjukkan bahwa fitur ini berkorelasi dengan RAIN.
 ## Data Preparation
 
+### Membuang Kolom
+```
+df = df.drop(columns = ['station'])
+```
+Kolom station dibuang dikarenakan dalam data ini hanya menggunakan satu stasiun saja. Sehingga kolom station tidak perlu untuk dimasukkan kedalam prediksi.
+
+### Penanganan Missing Value
+```
+# Mengisi missing value kolom numerik dengan rata-rata
+for col in ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 'WSPM']:
+    df[col] = df[col].fillna(value=df[col].mean())
+
+# Mengisi missing value kolom kategorik dengan modus
+df['wd'] = df['wd'].fillna(df['wd'].mode()[0])
+
+#Melihat kembali data apakah masih ada missing value
+print(df.isna().sum())
+```
+**Output:**
+```
+year     0
+month    0
+day      0
+hour     0
+PM2.5    0
+PM10     0
+SO2      0
+NO2      0
+CO       0
+O3       0
+TEMP     0
+PRES     0
+DEWP     0
+RAIN     0
+wd       0
+WSPM     0
+dtype: int64
+```
+Missing value yang terdapat pada kolom numerik diatasi dengan cara imputasi menggunakan nilai rata-rata (mean), sementara missing value pada kolom kategorik diisi dengan nilai yang paling sering muncul (modus).
+
+### Menangani Outlier
+![boxplot sesudah](https://github.com/user-attachments/assets/21dd2ca0-ca32-4d00-a94c-dbf80bc9d4fb)
+
+Namun, setelah metode ini diterapkan, ditemukan anomali penting: fitur “RAIN” menghilang dari dataset. Hal ini mengindikasikan bahwa perlakuan terhadap outlier justru menyebabkan informasi penting hilang, terutama karena data menunjukkan tidak ada kejadian hujan selama 2013–2017 dalam dataset asli, yang berisiko mengacaukan makna dari fitur tersebut.Sebagai solusi, diputuskan untuk tidak melakukan imputasi pada outlier secara langsung. Sebagai gantinya, ditambahkan kolom baru bernama “RAIN_Category” yang mengelompokkan data ke dalam kategori hujan dan tidak hujan, agar analisis dapat diarahkan pada pendekatan klasifikasi berdasarkan keberadaan hujan, tanpa merusak integritas data asli.
+
+| RAIN_Category |  Count  |
+|-----|-----|
+|  Tidak Hujan  | 33664  | 
+|  Hujan  | 1400 |
+
+### Memisahkan fitur dan label
+```
+X = df.drop(['RAIN', 'RAIN_Category', 'year', 'hour'], axis=1)
+y = df['RAIN_Category']
+```
+Memisahkan fitur dan label sekaligus menghapus kolom yang tidak dibutuhkan. Kolom year dan hour dihapus karena agar model lebih fokus menangkap pola pada bulan dan hari saja.
 ### Melakukan encoding label:
 ```
 df = pd.get_dummies(df, columns=['wd'], prefix='wd')
@@ -169,12 +211,7 @@ Encoding dilakukan sebagai langkah praproses untuk mengubah data kategorikal men
 scaler = MinMaxScaler()
 X_scaled = scaler.fit_transform(X)
 ```
-### Memisahkan fitur dan label
-```
-X = df.drop(['RAIN', 'RAIN_Category', 'year', 'hour'], axis=1)
-y = df['RAIN_Category']
-```
-Memisahkan fitur dan label sekaligus menghapus kolom yang tidak dibutuhkan. Kolom year dan hour dihapus karena agar model lebih fokus menangkap pola pada bulan dan hari saja.
+Scaling dilakukan pada model LSTM saja, dikarenakan fitur satu sama lain saling berkaitan, yang menyebabkan perbedaan skala antar fitur dapat mempengaruhi proses pembelajaran model secara signifikan. LSTM (Long Short-Term Memory) sangat sensitif terhadap skala data karena menggunakan fungsi aktivasi seperti sigmoid dan tanh, yang kinerjanya optimal pada nilai input yang terstandarisasi. Tanpa proses scaling, fitur dengan nilai yang besar dapat mendominasi perhitungan dan menyebabkan konvergensi yang lambat atau bahkan tidak stabil. Berbeda dengan model Random Forest, yang bersifat non-parametrik dan tidak terpengaruh oleh skala fitur, sehingga tidak memerlukan proses normalisasi atau standardisasi sebagai prasyarat pelatihan model.
 
 ### SMOTE data untuk model Random Forest
 ```
@@ -187,6 +224,7 @@ print("\nClass distribution before SMOTE:\n", y.value_counts())
 print("\nClass distribution after SMOTE:\n", y_resampled.value_counts())
 ```
 SMOTE dilakukan untuk menangani ketidak seimbangan data yang ada. Hal ini bertujuan untuk membantu model Random Forest memprediksi kelas minoritas, yang dalam kasus ini adalah kelas tidak hujan yang memiliki perbandingan 0.0399% dari keseluruhan data.
+
 
 ### Sliding Window untuk LSTM
 ```
@@ -245,8 +283,10 @@ early_stop = EarlyStopping(
 )
 ```
 
-  Kode diatas adalah sebuah model deep learning berbasis Long Short-Term Memory (LSTM) untuk melakukan klasifikasi biner terhadap data berurutan. Model dibangun menggunakan arsitektur Sequential, di mana lapisan pertama adalah LSTM dengan 64 unit memori yang menerima input berformat sekuensial, sesuai dengan jumlah time steps dan fitur dalam data. Setelah itu, ditambahkan lapisan output Dense dengan satu neuron dan fungsi aktivasi sigmoid, yang digunakan untuk menghasilkan probabilitas dari dua kelas (misalnya: curah hujan ekstrem atau tidak). Model kemudian dikompilasi menggunakan fungsi loss binary_crossentropy, yang sesuai untuk klasifikasi biner, dengan optimizer adam yang efisien untuk proses pelatihan, serta metrik evaluasi berupa akurasi. Untuk mencegah overfitting dan mengoptimalkan proses pelatihan, digunakan callback EarlyStopping yang akan menghentikan pelatihan jika nilai loss pada data validasi tidak mengalami perbaikan setelah lima epoch berturut-turut, serta secara otomatis mengembalikan bobot terbaik dari epoch dengan performa validasi terbaik. Pendekatan ini efektif dalam menangani data deret waktu dengan struktur yang tidak seimbang serta memastikan model tetap efisien dan akurat.
-
+  Kode di atas adalah sebuah model deep learning berbasis Long Short-Term Memory (LSTM) untuk melakukan klasifikasi biner terhadap data berurutan. Model ini menggunakan arsitektur jaringan saraf jenis Recurrent Neural Network (RNN) yang dirancang khusus untuk menangani data deret waktu dengan mempertahankan informasi penting dari masa lalu. Tidak seperti RNN standar yang sering mengalami kesulitan dalam mengingat hubungan jangka panjang karena masalah vanishing gradient, LSTM mengatasi keterbatasan ini melalui struktur internal yang terdiri dari tiga gerbang utama: forget gate, input gate, dan output gate. Ketiga gerbang ini memungkinkan model untuk secara selektif melupakan, menyimpan, dan mengeluarkan informasi selama proses pembelajaran, sehingga model menjadi lebih stabil dan efektif untuk memprediksi pola temporal. 
+  
+  Dalam konteks prediksi curah hujan, LSTM mampu mengenali tren musiman dan pola atmosfer dari data historis, bahkan ketika terdapat ketidakseimbangan kelas. Hal ini menjadikannya sangat berguna untuk memodelkan kejadian curah hujan ekstrem yang jarang terjadi, namun berdampak besar. Digabungkan dengan strategi pelatihan yang tepat, seperti penggunaan EarlyStopping dan normalisasi data, model LSTM dapat menghasilkan prediksi yang lebih akurat dan generalisasi yang lebih baik terhadap data yang belum pernah dilihat sebelumnya.
+  
 ```
 history = lstm.fit(
     X_train_lstm, y_train_lstm,
