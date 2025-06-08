@@ -15,6 +15,8 @@ Original file is located at
 
 !pip install -U imbalanced-learn
 
+"""Install library yang tidak terdapat di google colab"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -34,7 +36,9 @@ from imblearn.over_sampling import SMOTE
 from sklearn.metrics import f1_score
 from sklearn.model_selection import cross_val_score
 
-"""## Data Wrangling
+"""Import semua library yang diperlukan
+
+## Data Wrangling
 
 ### Gathering Data
 """
@@ -42,11 +46,17 @@ from sklearn.model_selection import cross_val_score
 df = pd.read_csv('/content/drive/MyDrive/DBS/TUGAS ANALISIS DATA/Air-quality-dataset/PRSA_Data_20130301-20170228/PRSA_Data_Aotizhongxin_20130301-20170228.csv', index_col='No')
 df.head()
 
+"""Membaca data dengan pandas"""
+
 df.columns
+
+"""Melihat kolom apa saja yang terdapat di data"""
 
 df.shape
 
-"""**Insight:**
+"""Melihat ukuran data
+
+**Insight:**
 - Terdapat 18 kolom dengan 17 kolom fitur dan 1 kolom index dan 35.064 baris pada data kualitas udara
 
 ### Assessing Data
@@ -54,15 +64,19 @@ df.shape
 
 df.info()
 
+"""Melihat tipe data pada tiap kolom"""
+
 df = df.drop(columns = ['station'])
 
-df.head()
-
-df.nunique()
+"""Membuang kolom station, karena hanya 1 stasiun yang dianalisis"""
 
 df.isna().sum()
 
+"""Melihat kolom-kolom yang memiliki nilai kosong"""
+
 df.duplicated().sum()
+
+"""Melihat apakah terdapat nilai duplikat"""
 
 # Mengatur ukuran figure
 plt.figure(figsize=(30, 16))
@@ -77,9 +91,9 @@ for i, col in enumerate(df_select_numeric.columns, 1):
 
 plt.tight_layout()
 
-df['RAIN'].value_counts()
+"""Melihat sebaran boxplot dan apakah terdapat outlier di tiap kolom
 
-"""**Insight:**
+**Insight:**
 - Terdapat banyak sekali data kosong/missing value pada kolom-kolom tersebut
 - Tidak terdapat duplikasi data
 - Banyak sekali outlier pada data-data numerik
@@ -96,6 +110,8 @@ df['wd'] = df['wd'].fillna(df['wd'].mode()[0])
 
 #Melihat kembali data apakah masih ada missing value
 print(df.isna().sum())
+
+"""Melakukan pembersihan data kosong dengan imputation, kolom numerik diisi dengan rata-rata dan kolom kategorik diisi dengan modus"""
 
 # Imputasi outlier dengan IQR
 def impute_outliers_iqr(df, column):
@@ -115,6 +131,8 @@ df_no_outlier = df.copy()
 for col in ['PM10', 'SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'WSPM', 'PM2.5', 'RAIN']:
     df_no_outlier = impute_outliers_iqr(df_no_outlier, col)
 
+"""Melakukan imputation pada outlier, mengganti nilai outlier dengan batas atas/bawah"""
+
 # Mengatur ukuran figure
 plt.figure(figsize=(30, 16))
 
@@ -128,9 +146,11 @@ for i, col in enumerate(df_select_numeric.columns, 1):
 
 plt.tight_layout()
 
+"""Melihat hasil pembersihan outlier"""
+
 df_no_outlier['RAIN'].value_counts()
 
-df['RAIN'].value_counts()
+"""Data RAIN menjadi 0, menandakan tidak pernah ada hujan"""
 
 rain = df['RAIN']
 for index, value in rain.items():
@@ -139,11 +159,13 @@ for index, value in rain.items():
   else:
     df.loc[index, 'RAIN_Category'] = 'Hujan'
 
+"""Melakukan pendekatan dengan menambahkan kolom baru sebagai label kategori Hujan dan Tidak Hujan"""
+
 df['RAIN_Category'].value_counts()
 
-1400/(33664+1400)
+"""Melihat sebaran label
 
-"""**Insight:**
+**Insight:**
 - Mengisi nilai kosong/missing value dengan rata-rata pada kolom numerik dan modus pada kolom kategorik
 - Menangani outlier dengan metode imputation pada data copy, jika outlier bawah maka diisi dengan nilai batas bawah dan jika outlier atas maka diisi dengan nilai batas atas
 - Semua kolom outlier yang diisi dengan batas atas dan bawah menunjukkan hilangnya fitur-fitur seperti pada kolom 'RAIN' ketika dilakukan imputation maka nilai rain hannya 0.0 itu akan merusak fakta dari data yang artinya tidak pernah ada hujan dari tahun 2013-2017, sehingga tidak perlu dilakukan imputation pada outlier
@@ -156,6 +178,8 @@ df['RAIN_Category'].value_counts()
 
 df_numeric = df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'RAIN', 'WSPM']]
 df_numeric.describe()
+
+"""Melakukan eksplorasi data numerik"""
 
 # Set the figure size
 plt.figure(figsize=(15, 10))
@@ -171,9 +195,10 @@ for i, col in enumerate(df_numeric.columns):
 plt.tight_layout()
 plt.show()
 
-"""- Bagaimana curah hujan tiap bulannya dalam kurun waktu satu tahun"""
+"""Melihat kembali sebaran data numerik
 
-df['RAIN'].value_counts()
+- Bagaimana curah hujan tiap bulannya dalam kurun waktu satu tahun
+"""
 
 rain_avg = df.groupby(['year', 'month'])['RAIN'].mean().reset_index()
 
@@ -188,7 +213,9 @@ plt.xlabel("Bulan")
 plt.ylabel("Tahun")
 plt.show()
 
-"""Analisis pertanyaan kedua
+"""Membuat heatmap untuk melihat bagaimana sebaran jumlah hujan, dengan sumbu x adalah bulan dan sumbu y adalah tahun. Dapat dilihat hampir tiap bulan ke-7 menjadi puncak hujan
+
+Analisis pertanyaan kedua
 - Faktor apa yang menyebabkan curah hujan
 """
 
@@ -208,7 +235,9 @@ plt.show()
 
 df_numeric.corr()
 
-"""**Insight:**
+"""Melihat apakah terdapat korelasi fitur antara hujan dengan fitur yang lainnya. Tidak terdapat korelasi pada fitur RAIN dengan fitur yang lain
+
+**Insight:**
 - Melakukan pivot tabel untuk melihat rata-rata curah hujan tiap bulannya dalam kurun waktu 2013/2017
 - Melihat korelasi antara hujan dengan atribut yang lain
 
@@ -231,7 +260,9 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-"""# **Modeling**
+"""Membuat grafik sebaran hujan, untuk memudahkan pemahaman sebaran hujan. Dan dapat dilihat hampir tiap bulan ke-7 menjadi puncak jumlah hujan
+
+# **Modeling**
 
 ## Encoding
 """
@@ -239,16 +270,24 @@ plt.show()
 X = df.drop(['RAIN', 'RAIN_Category', 'year', 'hour'], axis=1)
 y = df['RAIN_Category']
 
+"""Memisahkan kolom target dan fitur. Selain itu membuang kolom yang tidak dibutuhkan 'year' dan 'hour' karena agar lebih fokus pada bulan dan harinya saja"""
+
 X = pd.get_dummies(X, columns=['wd'], prefix='wd')
 y_encoded = y.map({'Hujan': 1, 'Tidak Hujan': 0})
 
-"""## Scaling Data"""
+"""Melakukan Encoding pada fitur kategorik (wd) dengan onehot encoder dan melakukan pelabelan manual pada target
+
+## Scaling Data
+"""
 
 # Scaling
 scaler = MinMaxScaler()
 X_scaled = scaler.fit_transform(X)
 
-"""## SMOTE untuk model Random Forest"""
+"""Melakukan scaling data untuk model LSTM, digunakan MinMaxScaler karena sebarannya hanya 0-1
+
+## SMOTE untuk model Random Forest
+"""
 
 smote = SMOTE(random_state=42)
 X_resampled, y_resampled = smote.fit_resample(X, y)
@@ -258,7 +297,10 @@ print("Shape after SMOTE:", X_resampled.shape)
 print("\nClass distribution before SMOTE:\n", y.value_counts())
 print("\nClass distribution after SMOTE:\n", y_resampled.value_counts())
 
-"""## Sliding Window untuk LSTM"""
+"""SMOTE data atau penambahan baris sintetis pada data yang nantinya akan digunakan untuk model Random Forest
+
+## Sliding Window untuk LSTM
+"""
 
 # Fungsi untuk membuat sequence (misal 3 waktu sebelumnya)
 def create_sequences(X, y, time_steps=3):
@@ -270,24 +312,33 @@ def create_sequences(X, y, time_steps=3):
 
 X_seq, y_seq = create_sequences(X_scaled, y_encoded, time_steps=3)
 
-"""## Split Data"""
+"""Mempersiapkan Window untuk model LSTM, teknik yang digunakan adalah Sliding Window dengan tiap window berukuran 3
+
+## Split Data
+"""
 
 #Split data Random Forest
 X_train,X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42, stratify=y_resampled)
 
 # Split data LSTM
-X_train_lstm, X_test_lstm, y_train_lstm, y_test_lstm = train_test_split(X_seq, y_seq, test_size=0.2, random_state=42)
+X_train_lstm, X_test_lstm, y_train_lstm, y_test_lstm = train_test_split(X_seq, y_seq, test_size=0.2, random_state=42, stratify = y_seq)
 
-X_test.head()
+"""Melakukan splitting data untuk tiap model, keduanya diperlakukan sama yaitu ukuran 80% data training dan 20% data testing
 
-"""## Random Forest"""
+## Random Forest
+"""
 
 rfc = RandomForestClassifier()
 rfc.fit(X_train, y_train)
 
+"""Melakukan fitting data pada model Random Forest dengan parameter default"""
+
 y_pred = rfc.predict(X_test)
 
-"""## LSTM"""
+"""Melakukan prediksi data tes pada model Random Forest dengan SMOTE
+
+## LSTM
+"""
 
 # Build model
 lstm = Sequential()
@@ -304,6 +355,8 @@ early_stop = EarlyStopping(
     restore_best_weights=True # Gunakan bobot terbaik (bukan dari epoch terakhir)
 )
 
+"""Membangun mempersiapkan model LSTM dengan layer pertama 64 dan layer kedua output 1, dengan fungsi aktivasi sigmoid untuk melakukan pengklasifikasian biner. Lakukan compile dengan optimizer adam dengan menghitung loss menggunakan binary cross entropy, dengan metrik perhitungan accuracy. Terakhir membuat callback untuk early stopping agar model tidak melakukan pelatihan sampai akhir ini bertujuan mempersingkat pelatihan dengan hasil terbaik."""
+
 history = lstm.fit(
     X_train_lstm, y_train_lstm,
     epochs=100,
@@ -312,14 +365,12 @@ history = lstm.fit(
     callbacks=[early_stop]
 )
 
-"""# **Evaluasi Data**
+"""Melakukan fitting pada model LSTM  dengan epoch 100 dan batchsize 16. Hasilnya model hanya melakukan 16 epoch, dikarenakan fungsi early stop yang digunakan.
+
+# **Evaluasi Data**
 
 ## Random Forest
 """
-
-scores = cross_val_score(rfc, X_test, y_test, cv=3)
-
-print("%0.2f accuracy with a standard deviation of %f" % (scores.mean(), scores.std()))
 
 cm = confusion_matrix(y_test, y_pred)
 
@@ -332,10 +383,15 @@ plt.ylabel('Actual')
 plt.title('Confusion Matrix')
 plt.show()
 
+"""Melihat sebaran prediksi menggunakan confusion matriks, model dapat memprediksi kedua kelas secara baik"""
+
 accuracy = classification_report(y_test, y_pred)
 print(accuracy)
 
-"""## LSTM"""
+"""Hasil klasifikasi model Random Forest dengan SMOTE sangat memuaskan mencapai akuarasi 0.98
+
+## LSTM
+"""
 
 # Plot training & validation accuracy values
 plt.figure(figsize=(12, 6))
@@ -361,9 +417,11 @@ loss, accuracy = lstm.evaluate(X_test_lstm, y_test_lstm, verbose=0)
 print(f'LSTM Test Accuracy: {accuracy:.4f}')
 print(f'LSTM Test Loss: {loss:.4f}')
 
+"""Grafik diatas adalah history hasil training pada model LSTM, model melakukan training yang bagus dimana bisa dilihat score training dan validation yang tidak beda secara signifikan"""
+
 lstm_pred = lstm.predict(X_test_lstm)
 
-lstm_pred
+"""Melakukan prediksi pada data test dengan model LSTM"""
 
 lstm_pred_classes = (lstm_pred > 0.3).astype(int)
 
@@ -379,8 +437,12 @@ plt.ylabel('Actual')
 plt.title('Confusion Matrix')
 plt.show()
 
+"""Melihat hasil prediksi data tes dengan confusion matriks, dapat dilihat model sulit menebak data hujan dikarenakan ketidak seimbangan data"""
+
 accuracy = classification_report(y_test_lstm, lstm_pred_classes)
 print(accuracy)
+
+"""Melihat hasil klasifikasi, dimana akurasi sangat tinggi mencapai 0.96 tetapi pada kelas 1 atau Hujan score sangat rendah"""
 
 # For Random Forest
 f1_rfc = f1_score(y_test, y_pred, pos_label='Hujan') # Specify the positive class
@@ -390,9 +452,14 @@ print(f'Random Forest F1 Score: {f1_rfc:.4f}')
 f1_lstm = f1_score(y_test_lstm, lstm_pred_classes) # No need for pos_label if already binary (0/1)
 print(f'LSTM F1 Score: {f1_lstm:.4f}')
 
-"""# **Inference**"""
+"""Melakukan pengukuran dengan F1-score karena ketidak seimbangan data, dapat dilihat bahwa Random Forest dengan SMOTE jauh signifikan lebih baik ketimbang LSTM tanpa SMOTE
+
+# **Inference**
+"""
 
 df[df['RAIN_Category'] == 'Hujan']
+
+"""Mencari data dengan label hujan untuk dilakukan pengujian"""
 
 #Prediksi Asli Hujan
 
@@ -431,6 +498,8 @@ data_df = pd.DataFrame(data)
 pred = rfc.predict(data_df)
 print(pred)
 
+"""Menggunakan salah satu data dengan label Hujan, lalu dilakukan prediksi dengan menggunakan model Random Forest yang sudah dilatih sebelumnya, hasilnya seusai yaitu Hujan"""
+
 # Scaling (pakai scaler dari training)
 data_baru_scaled = scaler.transform(data_df)
 
@@ -446,3 +515,5 @@ print("Probabilitas hujan:", prediksi[0][0])
 # Konversi ke label 0 atau 1 jika perlu
 label = 1 if prediksi[0][0] > 0.3 else 0
 print("Apakah akan hujan?", "Ya" if label == 1 else "Tidak")
+
+"""Melakukan prediksi data yang sama pada pengujian menggunakan Random Forest sebelumnya. Data di scaling terlebih dahulu dan dilakukan prediksi. Prediksi melenceng dari label yang seharusnya."""
