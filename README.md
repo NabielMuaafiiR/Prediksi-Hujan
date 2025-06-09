@@ -189,6 +189,14 @@ Namun, setelah metode ini diterapkan, ditemukan anomali penting: fitur “RAIN�
 |  Tidak Hujan  | 33664  | 
 |  Hujan  | 1400 |
 
+dilakukan kembali imputation pada data asli (df):
+```
+# Lakukan hal yang sama untuk kolom lain yang mengandung outlier
+for col in ['PM10', 'SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'WSPM', 'PM2.5']:
+    impute_outliers_iqr(df, col)
+```
+Dikarenakan sebelumnya hanya melihat bagaimana jika diberlakukan outlier. Semua outlier ditangani kecuali pada kolom RAIN.
+
 ### Memisahkan fitur dan label
 ```
 X = df.drop(['RAIN', 'RAIN_Category', 'year', 'hour'], axis=1)
@@ -283,9 +291,13 @@ early_stop = EarlyStopping(
 )
 ```
 
-  Kode di atas adalah sebuah model deep learning berbasis Long Short-Term Memory (LSTM) untuk melakukan klasifikasi biner terhadap data berurutan. Model ini menggunakan arsitektur jaringan saraf jenis Recurrent Neural Network (RNN) yang dirancang khusus untuk menangani data deret waktu dengan mempertahankan informasi penting dari masa lalu. Tidak seperti RNN standar yang sering mengalami kesulitan dalam mengingat hubungan jangka panjang karena masalah vanishing gradient, LSTM mengatasi keterbatasan ini melalui struktur internal yang terdiri dari tiga gerbang utama: forget gate, input gate, dan output gate. Ketiga gerbang ini memungkinkan model untuk secara selektif melupakan, menyimpan, dan mengeluarkan informasi selama proses pembelajaran, sehingga model menjadi lebih stabil dan efektif untuk memprediksi pola temporal. 
-  
-  Dalam konteks prediksi curah hujan, LSTM mampu mengenali tren musiman dan pola atmosfer dari data historis, bahkan ketika terdapat ketidakseimbangan kelas. Hal ini menjadikannya sangat berguna untuk memodelkan kejadian curah hujan ekstrem yang jarang terjadi, namun berdampak besar. Digabungkan dengan strategi pelatihan yang tepat, seperti penggunaan EarlyStopping dan normalisasi data, model LSTM dapat menghasilkan prediksi yang lebih akurat dan generalisasi yang lebih baik terhadap data yang belum pernah dilihat sebelumnya.
+  Model deep learning yang digunakan dalam kode di atas adalah jaringan saraf Long Short-Term Memory (LSTM) yang dirancang khusus untuk memproses dan mempelajari pola dari data deret waktu. Arsitektur model dibangun secara berurutan menggunakan Keras Sequential, dengan satu layer LSTM yang terdiri dari 64 unit tersembunyi (hidden units) dan diikuti oleh sebuah layer Dense dengan 1 neuron serta fungsi aktivasi sigmoid. Fungsi sigmoid digunakan karena tugas model adalah klasifikasi biner—dalam hal ini, untuk memprediksi apakah akan terjadi hujan (1) atau tidak (0) pada waktu tertentu.
+
+LSTM merupakan jenis Recurrent Neural Network (RNN) yang mengatasi kelemahan RNN standar dalam mengingat informasi jangka panjang akibat masalah vanishing gradient. Dengan struktur internal yang terdiri dari tiga gerbang utama—forget gate, input gate, dan output gate—LSTM dapat mengatur aliran informasi secara selektif: menentukan informasi mana yang perlu dilupakan, disimpan, atau diteruskan ke waktu berikutnya. Hal ini sangat penting dalam memodelkan fenomena seperti curah hujan, yang memiliki pola musiman dan ketergantungan temporal kuat, baik dalam skala harian, mingguan, maupun bulanan.
+
+Dalam implementasi ini, model juga dilengkapi dengan callback EarlyStopping, yaitu sebuah strategi pelatihan yang secara otomatis menghentikan proses training ketika performa model pada data validasi tidak membaik setelah sejumlah epoch tertentu. Dalam hal ini, parameter patience=5 berarti model akan berhenti jika selama lima epoch berturut-turut tidak ada penurunan nilai val_loss. Selain itu, dengan restore_best_weights=True, bobot terbaik model akan dipulihkan secara otomatis untuk menghindari overfitting akibat pelatihan yang terlalu lama.
+
+Kombinasi antara arsitektur LSTM, normalisasi fitur (melalui MinMaxScaler), dan penggunaan teknik EarlyStopping membuat model ini cukup tangguh dalam mengenali pola hujan dari data historis, sekaligus mampu menghindari overfitting dan meningkatkan generalisasi terhadap data yang belum pernah dilihat sebelumnya. Model seperti ini sangat cocok digunakan dalam aplikasi prediksi cuaca, khususnya dalam mengantisipasi hujan ekstrem atau perubahan iklim lokal yang sulit diprediksi dengan pendekatan konvensional.
   
 ```
 history = lstm.fit(
@@ -300,37 +312,51 @@ history = lstm.fit(
 
  ```
 Epoch 1/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 6s 3ms/step - accuracy: 0.9547 - loss: 0.1958 - val_accuracy: 0.9633 - val_loss: 0.1451
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 9s 4ms/step - accuracy: 0.9618 - loss: 0.1752 - val_accuracy: 0.9551 - val_loss: 0.1494
 Epoch 2/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 2ms/step - accuracy: 0.9604 - loss: 0.1379 - val_accuracy: 0.9629 - val_loss: 0.1273
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 10s 4ms/step - accuracy: 0.9597 - loss: 0.1340 - val_accuracy: 0.9551 - val_loss: 0.1481
 Epoch 3/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 6s 3ms/step - accuracy: 0.9605 - loss: 0.1260 - val_accuracy: 0.9640 - val_loss: 0.1193
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 11s 5ms/step - accuracy: 0.9593 - loss: 0.1231 - val_accuracy: 0.9565 - val_loss: 0.1275
 Epoch 4/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 2ms/step - accuracy: 0.9622 - loss: 0.1164 - val_accuracy: 0.9643 - val_loss: 0.1140
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 10s 5ms/step - accuracy: 0.9616 - loss: 0.1134 - val_accuracy: 0.9569 - val_loss: 0.1278
 Epoch 5/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 5s 2ms/step - accuracy: 0.9645 - loss: 0.1102 - val_accuracy: 0.9643 - val_loss: 0.1171
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 9s 4ms/step - accuracy: 0.9643 - loss: 0.1072 - val_accuracy: 0.9565 - val_loss: 0.1211
 Epoch 6/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 3ms/step - accuracy: 0.9637 - loss: 0.1108 - val_accuracy: 0.9640 - val_loss: 0.1142
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 8s 5ms/step - accuracy: 0.9633 - loss: 0.1061 - val_accuracy: 0.9569 - val_loss: 0.1244
 Epoch 7/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 2ms/step - accuracy: 0.9647 - loss: 0.1052 - val_accuracy: 0.9643 - val_loss: 0.1212
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 6s 4ms/step - accuracy: 0.9648 - loss: 0.1001 - val_accuracy: 0.9565 - val_loss: 0.1181
 Epoch 8/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 5s 2ms/step - accuracy: 0.9668 - loss: 0.0992 - val_accuracy: 0.9654 - val_loss: 0.1056
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 10s 4ms/step - accuracy: 0.9636 - loss: 0.1033 - val_accuracy: 0.9569 - val_loss: 0.1282
 Epoch 9/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 3ms/step - accuracy: 0.9650 - loss: 0.1021 - val_accuracy: 0.9651 - val_loss: 0.1176
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 8s 5ms/step - accuracy: 0.9636 - loss: 0.1027 - val_accuracy: 0.9565 - val_loss: 0.1162
 Epoch 10/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.9658 - loss: 0.1011 - val_accuracy: 0.9654 - val_loss: 0.1090
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 6s 4ms/step - accuracy: 0.9648 - loss: 0.0984 - val_accuracy: 0.9590 - val_loss: 0.1126
 Epoch 11/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 2ms/step - accuracy: 0.9670 - loss: 0.0971 - val_accuracy: 0.9665 - val_loss: 0.1041
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 11s 5ms/step - accuracy: 0.9658 - loss: 0.0965 - val_accuracy: 0.9597 - val_loss: 0.1086
 Epoch 12/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 6s 4ms/step - accuracy: 0.9642 - loss: 0.1013 - val_accuracy: 0.9643 - val_loss: 0.1393
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 6s 4ms/step - accuracy: 0.9663 - loss: 0.0913 - val_accuracy: 0.9604 - val_loss: 0.1118
 Epoch 13/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 8s 2ms/step - accuracy: 0.9658 - loss: 0.1005 - val_accuracy: 0.9640 - val_loss: 0.1077
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 10s 4ms/step - accuracy: 0.9665 - loss: 0.0961 - val_accuracy: 0.9619 - val_loss: 0.1060
 Epoch 14/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 5s 2ms/step - accuracy: 0.9672 - loss: 0.0959 - val_accuracy: 0.9647 - val_loss: 0.1179
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 8s 5ms/step - accuracy: 0.9678 - loss: 0.0867 - val_accuracy: 0.9601 - val_loss: 0.1053
 Epoch 15/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 4s 2ms/step - accuracy: 0.9664 - loss: 0.0942 - val_accuracy: 0.9658 - val_loss: 0.1097
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 6s 4ms/step - accuracy: 0.9663 - loss: 0.0892 - val_accuracy: 0.9590 - val_loss: 0.1083
 Epoch 16/100
-1578/1578 ━━━━━━━━━━━━━━━━━━━━ 6s 3ms/step - accuracy: 0.9689 - loss: 0.0887 - val_accuracy: 0.9508 - val_loss: 0.1400
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 11s 5ms/step - accuracy: 0.9681 - loss: 0.0852 - val_accuracy: 0.9583 - val_loss: 0.1062
+Epoch 17/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 10s 5ms/step - accuracy: 0.9679 - loss: 0.0848 - val_accuracy: 0.9608 - val_loss: 0.1030
+Epoch 18/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 10s 4ms/step - accuracy: 0.9683 - loss: 0.0824 - val_accuracy: 0.9608 - val_loss: 0.1017
+Epoch 19/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 10s 4ms/step - accuracy: 0.9720 - loss: 0.0764 - val_accuracy: 0.9590 - val_loss: 0.1109
+Epoch 20/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 10s 4ms/step - accuracy: 0.9699 - loss: 0.0787 - val_accuracy: 0.9597 - val_loss: 0.1059
+Epoch 21/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 7s 5ms/step - accuracy: 0.9716 - loss: 0.0756 - val_accuracy: 0.9601 - val_loss: 0.1059
+Epoch 22/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 7s 4ms/step - accuracy: 0.9730 - loss: 0.0719 - val_accuracy: 0.9572 - val_loss: 0.1069
+Epoch 23/100
+1578/1578 ━━━━━━━━━━━━━━━━━━━━ 11s 5ms/step - accuracy: 0.9733 - loss: 0.0716 - val_accuracy: 0.9590 - val_loss: 0.1026
 ```
 
 ## Evaluation
@@ -391,13 +417,13 @@ Sangat cocok jika:
 ### Hasil Evaluasi
 
 #### 1. Random Forest dengan SMOTE
-Pada pengujian pertama dengan parameter default didapatkan akurasi sebesar 98% dan F1-score sebesar 0.9846 dengan detail confusion matriks sebagai berikut:
+Pada pengujian pertama dengan parameter default didapatkan akurasi sebesar 98% dan F1-score sebesar 0.9845 dengan detail confusion matriks sebagai berikut:
 
 Confusion Matrix:
 |     |  Tidak Hujan  |  Hujan  |  
 |-----|-----|-----|
-|  Tidak Hujan  | 6691  | 42  | 
-|  Hujan  | 167  | 6566 | 
+|  Tidak Hujan  | 6692  | 41  | 
+|  Hujan  | 170  | 6563 | 
 
 
 Classification Report:
@@ -405,7 +431,7 @@ Classification Report:
               precision    recall  f1-score   support
 
        Hujan       0.98      0.99      0.98      6733
- Tidak Hujan       0.99      0.98      0.98      6733
+ Tidak Hujan       0.99      0.97      0.98      6733
 
     accuracy                           0.98     13466
    macro avg       0.98      0.98      0.98     13466
@@ -416,15 +442,15 @@ weighted avg       0.98      0.98      0.98     13466
 #### 2. LSTM tanpa SMOTE
 Hasil training dari model LSTM amat bagus dapat dilihat pada grafik berikut:
 
-![gambar grafik](https://github.com/user-attachments/assets/d9dfc8e3-e5d8-4b43-bbc1-2c8299757e58)
+![image](https://github.com/user-attachments/assets/dedb802a-2e6f-49a9-88e7-15205aad267f)
 
-Dilakukan testing menggunakan model LSTM hasil evaluasi model mengalami penurunan dimana akurasi menjadi 96.%, dan F1-score sebesar 0.4189, untuk detail confusion matriks sebagai berikut:
+Dilakukan testing menggunakan model LSTM hasil evaluasi model mengalami penurunan dimana akurasi menjadi 96.%, dan F1-score sebesar 0.4875, untuk detail confusion matriks sebagai berikut:
 
 Confusion Matrix:
 |     |  Tidak Hujan  |  Hujan  |  
 |-----|-----|-----|
-|  Tidak Hujan  | 6662  | 52  | 
-|  Hujan  | 206  | 93 | 
+|  Tidak Hujan  | 6619  | 114  | 
+|  Hujan  | 153  | 127 | 
 
 
 Classification Report:
