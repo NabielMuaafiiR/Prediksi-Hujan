@@ -250,7 +250,13 @@ for index, value in rain.items():
 
 df['RAIN_Category'].value_counts()
 
-"""Melihat sebaran label
+"""Melihat sebaran label"""
+
+# Lakukan hal yang sama untuk kolom lain yang mengandung outlier
+for col in ['PM10', 'SO2', 'NO2', 'CO', 'O3', 'TEMP', 'PRES', 'DEWP', 'WSPM', 'PM2.5']:
+    impute_outliers_iqr(df, col)
+
+"""Dilakukan kembali imputation pada data asli
 
 **Insight:**
 - Mengisi nilai kosong/missing value dengan rata-rata pada kolom numerik dan modus pada kolom kategorik
